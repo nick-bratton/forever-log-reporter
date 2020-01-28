@@ -53,7 +53,7 @@ async function compileUTF8EncodedLogs(){
 const main = async() => {
 	try{
 		let content = await compileUTF8EncodedLogs();
-		let response = await transporter.sendMail({
+		await transporter.sendMail({
 			from: `${process.env.FROM}`,
 			to: `${process.env.TO}`,
 			subject: 'test',
@@ -66,16 +66,44 @@ const main = async() => {
 				}
 			]
 		});
+		/*
+
+		and then here we need to 
+		perform some mongo session action
+
+		*/
+
 	}
 	catch(err){
 		throw err;
 	}
 }
 
-
-new Cron(interval, function() {
-	main();
-}, null, true, 'Europe/Berlin');
+// new Cron(interval, function() {
+// 	main();
+// }, null, true, 'Europe/Berlin');
 
 // dev: 
 // main().catch(console.error);
+
+const mongo = require('./mongo');
+
+const getSession = async() => {
+	try {
+		let client = await mongo.getClient();
+		let session = await mongo.getSession(client);
+	}
+	catch(err){
+		throw err;
+	}
+}
+
+getSession()
+	.then(session => {
+		try{
+
+		}
+		catch{
+
+		}
+	})
