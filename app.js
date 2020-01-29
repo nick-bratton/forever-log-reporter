@@ -7,8 +7,10 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const util = require('util');
 const readFile = util.promisify(fs.readFile);
+const readdir = util.promisify(fs.readdir);
 
-let interval = '15 10 * * MON';
+let cronInterval = '15 10 * * MON';
+let logFileExtLength = 3; // i.e., 3 for .log; 2 for .md
 
 let transporterConfig = {
 	host: `${process.env.HOST}`,
@@ -26,52 +28,56 @@ let transporter = nodemailer.createTransport(transporterConfig);
  
 const main = async() => {
 	try{
+		let logs = {};
+		let logfileNames = await readdir(`${process.env.LOGSDIR}`);
 
-		let appLog = await readFile('./logs/app.log', 'utf8');
-		let serverLog = await readFile('./logs/server.log', 'utf8');
-		let tunnelLog = await readFile('./logs/tunnel.log', 'utf8');
-
-		await transporter.sendMail({
-			from: `${process.env.FROM}`,
-			to: `${process.env.TO}`,
-			subject: 'Process Report',
-			attachments: [
-				{
-					content: appLog,
-					filename: 'app.log',
-					encoding: 'base64'
-				},
-				{
-					content: serverLog,
-					filename: 'server.log',
-					encoding: 'base64'
-				},
-				{
-					content: tunnelLog,
-					filename: 'tunnel.log',
-					encoding: 'base64'
-				}
-			]
-		});
-		let doc = {
-			date: Date().toString(),
-			logs: {
-				app: appLog,
-				server: serverLog,
-				tunnel: tunnelLog,
+		for(const name of logfileNames){
+			let path = `${process.env.LOGSDIR}` + `${name}`;
+			let content = await readFile(path, 'utf8');
+			let extensionlessName = name.slice(0, (logFileExtLength * -1) - 1);
+			logs[`${extensionlessName}`] = {
+				file: name,
+				content: content,
 			}
 		}
-		await mongo.insert(doc);
+
+		await sendMail(formatLogsAsNodemailerAttachments(logs));
+
+		await mongo.insert({
+			date: Date().toString(),
+			logs: logs
+		});
+
 	}
 	catch(err){
 		throw err;
 	}
 }
 
+const formatLogsAsNodemailerAttachments = (logs) => {
+	return Object.entries(logs).map(log => ({
+			content: log[1].content,
+			filename: log[1].file, 
+			encoding: 'utf8'
+		})
+	)
+}
+
+
+
+const sendMail = async(attachments) => {
+	await transporter.sendMail({
+		from: `${process.env.FROM}`,
+		to: `${process.env.TO}`,
+		subject: 'Process Report',
+		attachments: attachments
+	});
+}
+
 main().catch((err) => {
 	throw err;
 })
 
-// new Cron(interval, function() {
+// new Cron(cronInterval, function() {
 // 	main();
 // }, null, true, 'Europe/Berlin');
