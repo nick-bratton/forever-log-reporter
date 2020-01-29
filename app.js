@@ -3,7 +3,7 @@
 require('dotenv').config()
 const mongo = require('./mongo');
 const mail = require('./mail')
-// const Cron = require('cron').CronJob;
+const Cron = require('cron').CronJob;
 const fs = require('fs');
 const util = require('util');
 const readFile = util.promisify(fs.readFile);
@@ -39,10 +39,17 @@ const main = async() => {
 	}
 }
 
-main().catch((err) => {
-	throw err;
-})
+new Cron(process.env.CRON_INTERVAL, function() {
+	main().catch(err => {
+		throw err;
+	})
+}, null, true, 'Europe/Berlin');
 
-// new Cron(process.env.CRON_INTERVAL, function() {
-// 	main();
-// }, null, true, 'Europe/Berlin');
+
+
+// dev test? 
+// just do this: 
+// main().catch((err) => {
+// 	throw err;
+// })
+//
