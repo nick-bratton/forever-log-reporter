@@ -2,28 +2,14 @@
 'use strict';
 require('dotenv').config()
 const mongo = require('./mongo');
-const Cron = require('cron').CronJob;
-const nodemailer = require('nodemailer');
+const mail = require('./mail')
+// const Cron = require('cron').CronJob;
 const fs = require('fs');
 const util = require('util');
 const readFile = util.promisify(fs.readFile);
 const readdir = util.promisify(fs.readdir);
 
 let logFileExtLength = 3; // i.e., 3 for .log; 2 for .md
-
-let transporterConfig = {
-	host: `${process.env.HOST}`,
-	port: 587,
-	secure: false,
-	auth: {
-		user: `${process.env.FROM}`,
-		pass: `${process.env.PW}`
-	},
-	tls: {
-		rejectUnauthorized: false
-	}
-};
-let transporter = nodemailer.createTransport(transporterConfig);
  
 const main = async() => {
 	try{
@@ -40,7 +26,7 @@ const main = async() => {
 			}
 		}
 
-		await sendMail(formatLogsAsNodemailerAttachments(logs));
+		await mail.send(logs);
 
 		await mongo.insert({
 			date: Date().toString(),
@@ -51,26 +37,6 @@ const main = async() => {
 	catch(err){
 		throw err;
 	}
-}
-
-const formatLogsAsNodemailerAttachments = (logs) => {
-	return Object.entries(logs).map(log => ({
-			content: log[1].content,
-			filename: log[1].file, 
-			encoding: 'utf8'
-		})
-	)
-}
-
-
-
-const sendMail = async(attachments) => {
-	await transporter.sendMail({
-		from: `${process.env.FROM}`,
-		to: `${process.env.TO}`,
-		subject: 'Process Report',
-		attachments: attachments
-	});
 }
 
 main().catch((err) => {
