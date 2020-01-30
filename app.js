@@ -9,8 +9,6 @@ const util = require('util');
 const readFile = util.promisify(fs.readFile);
 const readdir = util.promisify(fs.readdir);
 const writeFile = util.promisify(fs.writeFile)
-
-let logFileExtLength = 3; // i.e., 3 for .log; 2 for .md
  
 const main = async() => {
 	try{
@@ -20,7 +18,7 @@ const main = async() => {
 		for(const name of logFileNames){
 			let path = `${process.env.LOGSDIR}` + `${name}`;
 			let content = await readFile(path, 'utf8');
-			let extensionlessName = name.slice(0, (logFileExtLength * -1) - 1);
+			let extensionlessName = name.slice(0, (process.env.LOGFILEEXTENSIONLENGTH * -1) - 1);
 			logs[`${extensionlessName}`] = {
 				file: name,
 				content: content,
