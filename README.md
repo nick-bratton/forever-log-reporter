@@ -10,3 +10,7 @@ what was the stack like where this is run?
 -should we containerize this?
 
 https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/
+
+this including susi requires you to be able to watch more files. on ubuntu: 
+
+# echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p

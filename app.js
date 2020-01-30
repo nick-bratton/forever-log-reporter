@@ -8,15 +8,16 @@ const fs = require('fs');
 const util = require('util');
 const readFile = util.promisify(fs.readFile);
 const readdir = util.promisify(fs.readdir);
+const writeFile = util.promisify(fs.writeFile)
 
 let logFileExtLength = 3; // i.e., 3 for .log; 2 for .md
  
 const main = async() => {
 	try{
 		let logs = {};
-		let logfileNames = await readdir(`${process.env.LOGSDIR}`);
+		let logFileNames = await readdir(`${process.env.LOGSDIR}`);
 
-		for(const name of logfileNames){
+		for(const name of logFileNames){
 			let path = `${process.env.LOGSDIR}` + `${name}`;
 			let content = await readFile(path, 'utf8');
 			let extensionlessName = name.slice(0, (logFileExtLength * -1) - 1);
@@ -33,6 +34,20 @@ const main = async() => {
 			logs: logs
 		});
 
+		return logFileNames;
+
+	}
+	catch(err){
+		throw err;
+	}
+}
+
+const cleanup = async(logFileNames) => {
+	try{
+		for(const name of logFileNames){
+			let path = `${process.env.LOGSDIR}` + name;
+			await writeFile(path, '');
+		}
 	}
 	catch(err){
 		throw err;
@@ -40,16 +55,23 @@ const main = async() => {
 }
 
 new Cron(process.env.CRON_INTERVAL, function() {
-	main().catch(err => {
-		throw err;
-	})
+	main()
+		.then(async logFileNames => {
+			await cleanup(logFileNames);
+		})
+		.catch(err => {
+			throw err;
+		})
 }, null, true, 'Europe/Berlin');
 
 
 
 // dev test? 
-// just do this: 
-// main().catch((err) => {
-// 	throw err;
-// })
-//
+// try: 
+// main()
+// 	.then(async logFileNames => {
+// 		await cleanup(logFileNames);
+// 	})
+// 	.catch((err) => {
+// 		throw err;
+// 	})
