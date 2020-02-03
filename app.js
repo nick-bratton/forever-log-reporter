@@ -61,15 +61,3 @@ new Cron(process.env.CRON_INTERVAL, function() {
 			throw err;
 		})
 }, null, true, 'Europe/Berlin');
-
-
-
-// dev test? 
-// try: 
-// main()
-// 	.then(async logFileNames => {
-// 		await cleanup(logFileNames);
-// 	})
-// 	.catch((err) => {
-// 		throw err;
-// 	})
