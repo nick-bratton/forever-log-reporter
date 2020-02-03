@@ -1,7 +1,9 @@
 .env
-node_modules
-.DS_Store
-logs/
-forever/
 
-README.md
+node_modules
+
+.DS_Store
+
+logs/
+
+forever/config.json
