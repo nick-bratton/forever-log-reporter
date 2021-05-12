@@ -13,6 +13,6 @@
     "cron": "^1.7.2",
     "dotenv": "^8.2.0",
     "mongodb": "^3.5.2",
-    "nodemailer": "^6.4.2"
+    "nodemailer": "^6.4.16"
   }
 }
